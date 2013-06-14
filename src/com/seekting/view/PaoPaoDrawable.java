@@ -1,6 +1,7 @@
 
 package com.seekting.view;
 
+import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
@@ -10,7 +11,13 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
+import android.widget.TextView;
 
+/**
+ * 1.0
+ * 
+ * @author seekting.x.zhang
+ */
 public class PaoPaoDrawable extends Drawable {
 
     int textPadding = 7;
@@ -27,7 +34,11 @@ public class PaoPaoDrawable extends Drawable {
 
     int textColor;
 
-    int textBackground;
+    ColorStateList textColorStateList;
+
+    int textFocusColor;
+
+    TextView textView;
 
     Drawable textBg;
 
@@ -36,6 +47,8 @@ public class PaoPaoDrawable extends Drawable {
     int srcWidth;
 
     int srcHeight;
+
+    int textBackground;
 
     public PaoPaoDrawable(Drawable src, int textSize, int textColor, int textBackground, int maxNum) {
         this.textSize = textSize;
@@ -52,6 +65,17 @@ public class PaoPaoDrawable extends Drawable {
         this.textSize = textSize;
         this.src = src;
         this.textColor = textColor;
+        this.textBg = textBackground;
+        this.maxNum = maxNum;
+
+        init();
+    }
+
+    public PaoPaoDrawable(Drawable src, int textSize, ColorStateList textColor,
+            Drawable textBackground, int maxNum) {
+        this.textSize = textSize;
+        this.src = src;
+        this.textColorStateList = textColor;
         this.textBg = textBackground;
         this.maxNum = maxNum;
 
@@ -89,21 +113,40 @@ public class PaoPaoDrawable extends Drawable {
     @Override
     public boolean setState(int[] stateSet) {
 
+        super.setState(stateSet);
+        boolean state = false;
+        if (textBg != null) {
+            if (textBg instanceof StateListDrawable) {
+                state = textBg.setState(stateSet);
+            }
+        }
+        if (textColorStateList != null) {
+            state = state | true;
+        }
         if (src instanceof StateListDrawable) {
 
-            boolean state = src.setState(stateSet);
+            state = state | src.setState(stateSet);
 
-            if (state) {
-                onStateChange(stateSet);
-            }
-            return state;
         }
-        return true;
+        if (state) {
+            onStateChange(stateSet);
+        }
+        return state;
     }
 
     @Override
     public boolean isStateful() {
-        boolean isStateful = src.isStateful();
+        boolean isStateful = false;
+        if (textBg != null) {
+            isStateful = textBg.isStateful();
+
+        }
+        if (textColorStateList != null) {
+            isStateful = isStateful | textColorStateList.isStateful();
+        }
+
+        isStateful = isStateful | src.isStateful();
+
         return isStateful;
     }
 
@@ -147,13 +190,14 @@ public class PaoPaoDrawable extends Drawable {
                 double maxWidth = Math.max(endX - beginX,
                         textBg.getIntrinsicWidth() - padding.width());
 
+                maxWidth = endX - beginX;
                 textBg.setBounds(0, 0, (int)(maxWidth) + padding.width(), (int)(endY - beginY)
                         + padding.height());
 
                 int x = (int)(srcWidth - textBg.getBounds().width());
                 canvas.save();
                 canvas.translate(x, 0);
-                o_x=x+textBg.getBounds().width()/2;
+                o_x = x + textBg.getBounds().width() / 2;
                 textBg.draw(canvas);
                 canvas.restore();
             } else {
@@ -172,6 +216,11 @@ public class PaoPaoDrawable extends Drawable {
 
             float baseLine = endY - fm.descent;
 
+            if (textColorStateList != null) {
+                int currentColor = textColorStateList.getColorForState(getState(),
+                        textColorStateList.getDefaultColor());
+                textPaint.setColor(currentColor);
+            }
             canvas.drawText(String.valueOf(numStr), o_x - length / 2, baseLine, textPaint);
             //
             // FontMetrics fm = textPaint.getFontMetrics();
@@ -223,10 +272,20 @@ public class PaoPaoDrawable extends Drawable {
     @Override
     protected boolean onStateChange(int[] state) {
 
-        if (src instanceof StateListDrawable) {
-            this.invalidateSelf();
-            return true;
+        boolean needInvalidateSelf = false;
+        if (textBg != null && textBg instanceof StateListDrawable) {
+            needInvalidateSelf = needInvalidateSelf | true;
         }
-        return false;
+        if (src instanceof StateListDrawable) {
+            needInvalidateSelf = needInvalidateSelf | true;
+
+        }
+        if (textColorStateList != null) {
+            needInvalidateSelf = needInvalidateSelf | true;
+        }
+        if (needInvalidateSelf) {
+            invalidateSelf();
+        }
+        return needInvalidateSelf;
     }
 }
