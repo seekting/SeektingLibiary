@@ -4,5 +4,6 @@
     <string name="app_name">li</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
+    <string name="crash_toast_text">未知错误，正在保存日志...</string>
 
 </resources>
