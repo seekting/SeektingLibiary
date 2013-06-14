@@ -17,7 +17,7 @@ public class PaoPaoDrawable extends Drawable {
 
     int textSize;
 
-    int num = 1;
+    public int num = 1;
 
     Drawable src;
 
