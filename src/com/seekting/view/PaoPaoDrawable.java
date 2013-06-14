@@ -29,6 +29,8 @@ public class PaoPaoDrawable extends Drawable {
 
     int textBackground;
 
+    Drawable textBg;
+
     int maxNum = -1;
 
     int srcWidth;
@@ -40,6 +42,17 @@ public class PaoPaoDrawable extends Drawable {
         this.src = src;
         this.textColor = textColor;
         this.textBackground = textBackground;
+        this.maxNum = maxNum;
+
+        init();
+    }
+
+    public PaoPaoDrawable(Drawable src, int textSize, int textColor, Drawable textBackground,
+            int maxNum) {
+        this.textSize = textSize;
+        this.src = src;
+        this.textColor = textColor;
+        this.textBg = textBackground;
         this.maxNum = maxNum;
 
         init();
@@ -125,18 +138,37 @@ public class PaoPaoDrawable extends Drawable {
             FontMetrics fm = textPaint.getFontMetrics();
             float endY = fm.descent - fm.ascent;
             float d = endY;
-
-            paint.setStyle(Style.FILL);
-            paint.setColor(textBackground);
             float o_x = (beginX + endX) / 2;
             float o_y = (beginY + endY) / 2;
-            // canvas.drawCircle(o_x, o_y, (endY - beginY) / 2, paint);
-            RectF oval = new RectF();
-            oval.top = beginY;
-            oval.bottom = endY;
-            oval.left = beginX;
-            oval.right = endX;
-            canvas.drawArc(oval, 0, 360, true, paint);
+            if (textBg != null) {
+                Rect padding = new Rect();
+                textBg.getPadding(padding);
+
+                double maxWidth = Math.max(endX - beginX,
+                        textBg.getIntrinsicWidth() - padding.width());
+
+                textBg.setBounds(0, 0, (int)(maxWidth) + padding.width(), (int)(endY - beginY)
+                        + padding.height());
+
+                int x = (int)(srcWidth - textBg.getBounds().width());
+                canvas.save();
+                canvas.translate(x, 0);
+                o_x=x+textBg.getBounds().width()/2;
+                textBg.draw(canvas);
+                canvas.restore();
+            } else {
+                paint.setStyle(Style.FILL);
+                paint.setColor(textBackground);
+
+                // canvas.drawCircle(o_x, o_y, (endY - beginY) / 2, paint);
+
+                RectF oval = new RectF();
+                oval.top = beginY;
+                oval.bottom = endY;
+                oval.left = beginX;
+                oval.right = endX;
+                canvas.drawArc(oval, 0, 360, true, paint);
+            }
 
             float baseLine = endY - fm.descent;
 
@@ -147,7 +179,7 @@ public class PaoPaoDrawable extends Drawable {
             // textPaint.setColor(Color.BLACK);
             // canvas.save();
             // canvas.translate(0, 30);
-            // canvas.drawText("xxYzÔÂ", 0, 0, textPaint);
+            // canvas.drawText("xxYzï¿½ï¿½", 0, 0, textPaint);
             // canvas.drawLine(0, fm.ascent, bitmap.getWidth(), fm.ascent,
             // textPaint);
             // canvas.drawLine(0, fm.descent, bitmap.getWidth(), fm.descent,
@@ -175,6 +207,12 @@ public class PaoPaoDrawable extends Drawable {
     public void setColorFilter(ColorFilter cf) {
         src.setColorFilter(cf);
 
+    }
+
+    @Override
+    public boolean getPadding(Rect padding) {
+        // TODO Auto-generated method stub
+        return src.getPadding(padding);
     }
 
     @Override
